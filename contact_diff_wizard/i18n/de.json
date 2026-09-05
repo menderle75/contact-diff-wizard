@@ -1,0 +1,19 @@
+{
+  "app.title": "ContactDiffWizard",
+  "app.subtitle": "Outlook- und Gmail-Kontakte vergleichen (nur Lesezugriff)",
+  "language.label": "Sprache",
+
+  "auth.google.connect": "Mit Gmail verbinden",
+  "auth.microsoft.connect": "Mit Outlook verbinden",
+  "auth.connected": "Verbunden",
+  "auth.not_connected": "Nicht verbunden",
+
+  "compare.run": "Kontakte vergleichen",
+  "compare.running": "Abrufen und vergleichen…",
+
+  "diff.only_in": "Nur in {source}",
+  "diff.identical": "In beiden, identisch",
+  "diff.diverging": "In beiden, abweichende Felder",
+  "diff.field": "Feld",
+  "diff.count": "{n} Kontakte"
+}

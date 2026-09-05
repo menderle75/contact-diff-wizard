@@ -1,0 +1,16 @@
+# UI
+streamlit>=1.38
+
+# Google OAuth + People API
+google-auth-oauthlib>=1.2
+google-api-python-client>=2.140
+
+# Microsoft OAuth (Graph)
+msal>=1.31
+
+# Matching helpers
+rapidfuzz>=3.9
+phonenumbers>=8.13
+
+# HTTP (Microsoft Graph calls)
+requests>=2.32

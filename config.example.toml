@@ -1,0 +1,27 @@
+# Copy this file to `config.toml` and fill in the values from the one-time
+# OAuth app registration (done by the project maintainer).
+#
+# For desktop / native apps using the Authorization Code Flow with PKCE the
+# client ID is NOT a secret — but we still keep the working copy out of git so
+# everyone runs against their own registration if they want to.
+
+[google]
+# Google Cloud Console -> APIs & Services -> Credentials -> OAuth client ID
+# Application type: "Desktop app"
+client_id = "TODO.apps.googleusercontent.com"
+# Desktop clients created after 2022 also hand out a client_secret. It is not
+# treated as confidential for installed apps, but is required by the library.
+client_secret = "TODO"
+scopes = ["https://www.googleapis.com/auth/contacts.readonly"]
+
+[microsoft]
+# Azure Portal -> Microsoft Entra ID -> App registrations
+# Platform: "Mobile and desktop applications", redirect URI: http://localhost
+client_id = "TODO"
+# "common" = any personal or work/school account; or a specific tenant ID
+authority = "https://login.microsoftonline.com/common"
+scopes = ["Contacts.Read"]
+
+[app]
+# Language shown on first start until the user picks one. "de" or "en".
+default_language = "de"

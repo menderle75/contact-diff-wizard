@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Secrets / OAuth tokens / local config
+*.token.json
+token_*.json
+.streamlit/secrets.toml
+config.toml
+config.local.toml
+credentials.json
+client_secret*.json
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
