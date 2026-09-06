@@ -3,17 +3,30 @@
   "app.subtitle": "Outlook- und Gmail-Kontakte vergleichen (nur Lesezugriff)",
   "language.label": "Sprache",
 
+  "sidebar.sources": "Quellen",
   "auth.google.connect": "Mit Gmail verbinden",
-  "auth.microsoft.connect": "Mit Outlook verbinden",
-  "auth.connected": "Verbunden",
-  "auth.not_connected": "Nicht verbunden",
+  "auth.google.connecting": "Browser-Login läuft – bitte im geöffneten Fenster zustimmen…",
+  "auth.google.connected": "Gmail verbunden",
+  "auth.google.error": "Gmail-Login fehlgeschlagen: {error}",
 
-  "compare.run": "Kontakte vergleichen",
-  "compare.running": "Abrufen und vergleichen…",
+  "upload.label": "Outlook-Export (CSV oder vCard)",
+  "upload.help": "Outlook.com: Personen → Verwalten → Kontakte exportieren. Oder Outlook Desktop: Datei → Öffnen und Exportieren → In Datei exportieren → CSV.",
+  "upload.loaded": "{n} Outlook-Kontakte geladen",
 
-  "diff.only_in": "Nur in {source}",
-  "diff.identical": "In beiden, identisch",
-  "diff.diverging": "In beiden, abweichende Felder",
-  "diff.field": "Feld",
-  "diff.count": "{n} Kontakte"
+  "compare.run": "Vergleichen",
+  "compare.running": "Kontakte abrufen und vergleichen…",
+  "compare.needs_both": "Bitte zuerst Gmail verbinden und einen Outlook-Export hochladen.",
+
+  "results.none": "Noch kein Vergleich. Links Gmail verbinden, Outlook-Datei hochladen, dann „Vergleichen“.",
+  "results.updated": "Vergleich aktualisiert.",
+
+  "view.label": "Ansicht",
+  "view.only_google": "Nur in Gmail",
+  "view.only_outlook": "Nur in Outlook",
+  "view.identical": "In beiden – identisch",
+  "view.diverging": "In beiden – abweichend",
+
+  "filter.label": "Nach Name filtern",
+  "table.empty": "Keine Einträge in dieser Ansicht.",
+  "table.count": "{n} Einträge"
 }

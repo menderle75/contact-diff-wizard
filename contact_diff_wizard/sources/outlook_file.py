@@ -61,20 +61,35 @@ class OutlookFileContactSource:
     id = "outlook"
     display_name = "Outlook"
 
-    def __init__(self, path: str | Path) -> None:
-        self._path = Path(path)
+    def __init__(
+        self,
+        path: str | Path | None = None,
+        *,
+        data: bytes | None = None,
+        filename: str = "",
+    ) -> None:
+        if (path is None) == (data is None):
+            raise ValueError("pass exactly one of `path` or `data`")
+        self._path = Path(path) if path is not None else None
+        self._data = data
+        self._filename = filename or (self._path.name if self._path else "")
+
+    @classmethod
+    def from_upload(cls, data: bytes, filename: str) -> OutlookFileContactSource:
+        """Build from an in-memory upload (e.g. Streamlit file_uploader)."""
+        return cls(data=data, filename=filename)
 
     # --- ContactSource protocol ----------------------------------------
     def is_authenticated(self) -> bool:
-        return self._path.is_file()
+        return self._data is not None or (self._path is not None and self._path.is_file())
 
     def authenticate(self) -> None:
-        if not self._path.is_file():
+        if self._data is None and not (self._path and self._path.is_file()):
             raise FileNotFoundError(self._path)
 
     def fetch_contacts(self) -> list[Contact]:
-        data = self._path.read_bytes()
-        return parse_bytes(data, filename=self._path.name)
+        data = self._data if self._data is not None else self._path.read_bytes()
+        return parse_bytes(data, filename=self._filename)
 
 
 def parse_bytes(data: bytes, filename: str = "") -> list[Contact]:

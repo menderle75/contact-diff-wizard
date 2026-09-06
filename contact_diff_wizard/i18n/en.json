@@ -3,17 +3,30 @@
   "app.subtitle": "Compare your Outlook and Gmail contacts (read-only)",
   "language.label": "Language",
 
+  "sidebar.sources": "Sources",
   "auth.google.connect": "Connect Gmail",
-  "auth.microsoft.connect": "Connect Outlook",
-  "auth.connected": "Connected",
-  "auth.not_connected": "Not connected",
+  "auth.google.connecting": "Browser login in progress – please approve in the window that opened…",
+  "auth.google.connected": "Gmail connected",
+  "auth.google.error": "Gmail login failed: {error}",
 
-  "compare.run": "Compare contacts",
-  "compare.running": "Fetching and comparing…",
+  "upload.label": "Outlook export (CSV or vCard)",
+  "upload.help": "Outlook.com: People → Manage → Export contacts. Or Outlook Desktop: File → Open & Export → Export to a file → CSV.",
+  "upload.loaded": "{n} Outlook contacts loaded",
 
-  "diff.only_in": "Only in {source}",
-  "diff.identical": "In both, identical",
-  "diff.diverging": "In both, differing fields",
-  "diff.field": "Field",
-  "diff.count": "{n} contacts"
+  "compare.run": "Compare",
+  "compare.running": "Fetching and comparing contacts…",
+  "compare.needs_both": "Connect Gmail and upload an Outlook export first.",
+
+  "results.none": "No comparison yet. Connect Gmail, upload the Outlook file, then \"Compare\".",
+  "results.updated": "Comparison updated.",
+
+  "view.label": "View",
+  "view.only_google": "Only in Gmail",
+  "view.only_outlook": "Only in Outlook",
+  "view.identical": "In both – identical",
+  "view.diverging": "In both – differing",
+
+  "filter.label": "Filter by name",
+  "table.empty": "Nothing in this view.",
+  "table.count": "{n} entries"
 }

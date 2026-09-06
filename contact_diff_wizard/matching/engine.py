@@ -15,6 +15,7 @@ support that.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -117,14 +118,40 @@ def _phone_set(c: Contact) -> set[str]:
     return {p.e164 for p in c.phones if p.e164}
 
 
+ADDRESS_EQUIV_THRESHOLD = 82.0  # token_sort_ratio above which two addresses
+#                                 count as "the same address, formatted differently"
+
+
 def _addr_set(c: Contact) -> set[str]:
+    """Normalized address strings: alnum tokens, sorted, lowercased.
+
+    Sorting the tokens makes the comparison order-insensitive (Google and
+    Outlook put street / number / city / country in different orders).
+    """
     out = set()
     for a in c.addresses:
-        parts = [a.street, a.postal_code, a.city, a.region, a.country]
-        key = " ".join(p for p in parts if p).strip().casefold()
-        if key:
-            out.add(key)
+        raw = " ".join(
+            p for p in (a.street, a.postal_code, a.city, a.region, a.country) if p
+        )
+        toks = sorted(t for t in re.split(r"[^0-9a-zäöüß]+", raw.casefold()) if t)
+        if toks:
+            out.add(" ".join(toks))
     return out
+
+
+def _addr_sets_equivalent(sets: list[set[str]]) -> bool:
+    """True if every address in each set has a fuzzy partner in every other set."""
+    for i in range(len(sets)):
+        for j in range(len(sets)):
+            if i == j:
+                continue
+            for a in sets[i]:
+                if not any(
+                    fuzz.token_sort_ratio(a, b) >= ADDRESS_EQUIV_THRESHOLD
+                    for b in sets[j]
+                ):
+                    return False
+    return True
 
 
 def _org_key(c: Contact) -> str:
@@ -175,14 +202,20 @@ def _compare_group(members: list[Contact], source_ids: list[str]) -> list[FieldD
              for sid, cs in by_source.items()},
         ))
 
-    # --- set-valued fields: emails, phones, addresses
+    # --- set-valued fields: emails + phones exact, addresses fuzzy
     for fname, fn in (("emails", _email_set), ("phones", _phone_set),
                       ("addresses", _addr_set)):
         sets_by_source = {sid: _merge_sets(cs, fn) for sid, cs in by_source.items()}
         non_empty = [s for s in sets_by_source.values() if s]
         if len(non_empty) < 2:
             continue  # only one source has any value -> not a "divergence"
-        if any(a != b for a in non_empty for b in non_empty):
+
+        if fname == "addresses":
+            differs = not _addr_sets_equivalent(non_empty)
+        else:
+            differs = any(a != b for a in non_empty for b in non_empty)
+
+        if differs:
             diffs.append(FieldDiff(
                 fname,
                 {sid: ", ".join(sorted(s)) if s else "—"
