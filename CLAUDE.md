@@ -130,6 +130,13 @@ Der Nutzer möchte **keine einzige Zeile Code selbst anfassen** und arbeitet bew
 3. ~~Azure/Microsoft Entra App-Registrierung~~ ❌ entfällt — Outlook per Datei-Import
 4. ~~OAuth-Flow isoliert testen~~ ✅ Google getestet (`scripts/test_google_login.py`, echtes Konto, 228 Kontakte)
 5. Kontaktabruf: Google People API (alle Felder, paginiert) + Outlook-Datei-Parser (`sources/outlook_file.py` ✅) ins neutrale Modell normalisieren
-6. Matching-Logik implementieren (E-Mail → Telefon → Fuzzy-Name) und mit echten Testdaten des Nutzers verifizieren (`outlook-contacts.csv`, gitignored, liegt lokal vor)
-7. Diff-UI in Streamlit bauen (Datei-Upload für Outlook + „Mit Gmail verbinden" + „Vergleichen")
-8. README für andere Nutzer schreiben ✅ (Rohfassung vorhanden, bei Feature-Fortschritt aktualisieren)
+6. ~~Matching-Logik~~ ✅ `matching/engine.py`, gegen echte Daten verifiziert (99 identisch / 87 abweichend / 38 nur-Gmail / 363 nur-Outlook). Fuzzy-Schwelle 90, Adressvergleich fuzzy (≥82).
+7. ~~Diff-UI in Streamlit~~ ✅ `app.py` — Sidebar (Sprache, Gmail-OAuth, Outlook-Upload, Vergleichen) + zentrale Ansicht mit `segmented_control` über die vier Kategorien. Start: `streamlit run contact_diff_wizard/app.py` oder `.claude/launch.json`.
+8. README ✅ (bei Feature-Fortschritt aktualisieren)
+
+### Noch offen / Feinschliff
+- UI mit echtem Upload durch den Nutzer end-to-end testen (Logik + report.py sind per Skript verifiziert, `scripts/test_compare.py`)
+- Dubletten-Ansicht (22 Gruppen bündeln mehrere Kontakte aus *einer* Quelle)
+- `report.py` Spaltenüberschriften sind noch hart Deutsch → i18n
+- Adress-/Telefon-Diff-Darstellung in der UI evtl. übersichtlicher (aktuell kommagetrennte Strings)
+- Packaging/README-Feinschliff für Fremdnutzer

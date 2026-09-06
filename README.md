@@ -56,8 +56,9 @@ The UI ships with English and German and a language switcher in the sidebar.
 
 - [x] Google OAuth (loopback) + People API contact fetch
 - [x] Outlook export parser (CSV + vCard)
-- [ ] Matching (email → phone → fuzzy name) and field-level diff
-- [ ] Diff UI
+- [x] Matching (email → phone → fuzzy name) and field-level diff
+- [x] Diff UI (one view, category selector)
+- [ ] Duplicate view, nicer address/phone diff rendering, full UI i18n
 - [ ] Later, out of MVP scope: iCloud / CardDAV sources, Microsoft Graph, merge/sync
 
 ## License
