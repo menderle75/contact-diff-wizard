@@ -2,31 +2,32 @@
   "app.title": "ContactDiffWizard",
   "app.subtitle": "Outlook- und Gmail-Kontakte vergleichen (nur Lesezugriff)",
   "language.label": "Sprache",
-
   "sidebar.sources": "Quellen",
   "auth.google.connect": "Mit Gmail verbinden",
   "auth.google.connecting": "Browser-Login läuft – bitte im geöffneten Fenster zustimmen…",
   "auth.google.connected": "Gmail verbunden",
   "auth.google.error": "Gmail-Login fehlgeschlagen: {error}",
-
   "upload.label": "Outlook-Export (CSV oder vCard)",
   "upload.help": "Outlook.com: Personen → Verwalten → Kontakte exportieren. Oder Outlook Desktop: Datei → Öffnen und Exportieren → In Datei exportieren → CSV.",
   "upload.loaded": "{n} Outlook-Kontakte geladen",
-
   "compare.run": "Vergleichen",
   "compare.running": "Kontakte abrufen und vergleichen…",
   "compare.needs_both": "Bitte zuerst Gmail verbinden und einen Outlook-Export hochladen.",
-
   "results.none": "Noch kein Vergleich. Links Gmail verbinden, Outlook-Datei hochladen, dann „Vergleichen“.",
   "results.updated": "Vergleich aktualisiert.",
-
   "view.label": "Ansicht",
   "view.only_google": "Nur in Gmail",
   "view.only_outlook": "Nur in Outlook",
   "view.identical": "In beiden – identisch",
   "view.diverging": "In beiden – abweichend",
-
   "filter.label": "Nach Name filtern",
   "table.empty": "Keine Einträge in dieser Ansicht.",
-  "table.count": "{n} Einträge"
+  "table.count": "{n} Einträge – Zeile anklicken für den Vergleich",
+  "detail.no_diff": "Keine abweichenden Felder.",
+  "detail.same_count": "{n} übereinstimmende Felder anzeigen",
+  "detail.matched_by": "Zugeordnet über: {reason}",
+  "decide.title": "Was übernehmen?",
+  "decide.both": "beide",
+  "decide.export": "{n} Entscheidungen als CSV herunterladen",
+  "col.delta_help": "Welche Feldtypen abweichen"
 }
