@@ -134,9 +134,12 @@ Der Nutzer möchte **keine einzige Zeile Code selbst anfassen** und arbeitet bew
 7. ~~Diff-UI in Streamlit~~ ✅ `app.py` — Sidebar (Sprache, Gmail-OAuth, Outlook-Upload, Vergleichen) + zentrale Ansicht mit `segmented_control` über die vier Kategorien. Start: `streamlit run contact_diff_wizard/app.py` oder `.claude/launch.json`.
 8. README ✅ (bei Feature-Fortschritt aktualisieren)
 
+### Stand UI
+Master-Detail: links Kontaktliste (eine Zeile/Kontakt, in der „abweichend"-Ansicht mit Δ-Icon-Spalte + Anzahl, sortiert nach meisten Abweichungen), rechts Gmail↔Outlook-Seitenvergleich (abweichende Felder gelb + oben, übereinstimmende eingeklappt). Pro abweichendem Feld „übernehmen: Gmail/Outlook/beide" → „Entscheidungen als CSV herunterladen" (reine Arbeitsliste, kein Write-back). `CDW_DEV_OUTLOOK=<pfad>` lädt lokal eine Datei vor (Dev). In der laufenden App gegen echte Daten getestet.
+
 ### Noch offen / Feinschliff
-- UI mit echtem Upload durch den Nutzer end-to-end testen (Logik + report.py sind per Skript verifiziert, `scripts/test_compare.py`)
+- Prev/Next-Buttons im Detail (durch alle Abweichungen blättern ohne zurück zur Liste)
 - Dubletten-Ansicht (22 Gruppen bündeln mehrere Kontakte aus *einer* Quelle)
-- `report.py` Spaltenüberschriften sind noch hart Deutsch → i18n
-- Adress-/Telefon-Diff-Darstellung in der UI evtl. übersichtlicher (aktuell kommagetrennte Strings)
-- Packaging/README-Feinschliff für Fremdnutzer
+- `report.py` Spaltenüberschriften/Feldlabels sind noch hart Deutsch → i18n
+- Fuzzy-Schwelle / `PHONE_MATCH_MIN_NAME_SIM` ggf. am UI-Feedback justieren
+- Packaging/README-Feinschliff für Fremdnutzer (PyInstaller später)
