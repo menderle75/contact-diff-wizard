@@ -2,14 +2,26 @@
 
 > Diese Datei ist der Einstiegspunkt für eine Claude Code Session. Kontext, Entscheidungen und offene Punkte aus der Konzeptionsphase mit dem Nutzer (Chat-Interface) sind hier festgehalten, damit keine Rückfragen zu bereits getroffenen Entscheidungen nötig sind.
 
-## Namensvorschläge (noch nicht final entschieden)
+## Umsetzungsstand (Stand: erste Coding-Sessions, Sep 2026)
 
-Im Konzeptions-Chat vorgeschlagen, Auswahl/Entscheidung steht noch aus — bei Bedarf in der Coding-Session nachfragen oder Platzhalter-Namen weiterverwenden:
+Entscheidungen, die die ursprüngliche Konzeption unten an einigen Stellen überschreiben:
+
+- **Name:** endgültig **ContactDiffWizard** (Python-Paket `contact_diff_wizard`). Die Namensliste unten ist erledigt.
+- **UI/OAuth:** Streamlit + Loopback-Flow der offiziellen Google-Libs (`InstalledAppFlow.run_local_server`). Die „offene technische Frage" zum Redirect-Callback ist damit beantwortet — kein separater FastAPI-Server nötig. Token-Cache in gitignorierten `*.token.json`-Dateien.
+- **Google:** vollständig funktionsfähig (OAuth + People API, gegen echtes Konto getestet). Einmalige OAuth-App liegt beim Maintainer, Client-ID/-Secret in gitignorierter `config.toml`.
+- **Microsoft/Outlook:** **kein Azure, kein Microsoft Graph, kein `msal`.** Ein privates Microsoft-Konto kann keinen Entra-Tenant anlegen (Microsoft hat das zugemacht), und der Nutzer will kein kostenpflichtiges/kreditkartengebundenes Azure-Konto. Stattdessen: **Outlook-Kontakte werden als Datei-Export eingelesen** (CSV im Outlook-Format oder vCard `.vcf`) über `sources/outlook_file.py`. Microsoft Graph bleibt eine mögliche *spätere* Ergänzung, ist aber nicht Teil des MVP.
+- **Repo:** öffentlich unter https://github.com/menderle75/contact-diff-wizard (MIT).
+
+Wo unten „Microsoft OAuth", „Azure/Entra", „`msal`" oder „beide OAuth-Flows" steht: gilt nicht mehr, siehe oben. Die Architektur-Leitplanken (anbieter-agnostisches Modell, `ContactSource`-Interface, Liste von Quellen) bleiben — die Datei-Quelle ist einfach eine weitere `ContactSource`-Implementierung.
+
+## Namensvorschläge (erledigt — entschieden: ContactDiffWizard)
+
+Im Konzeptions-Chat vorgeschlagen, Entscheidung inzwischen gefallen (siehe Umsetzungsstand oben):
 
 1. **ContactSync Bridge**
 2. **ContactMerge** / Kontaktabgleich
 3. **Rosetta Contacts**
-4. **ContactDiffWizard** (favorisierte Richtung laut Nutzer)
+4. **ContactDiffWizard** ← gewählt
 5. **ContactCompare Wizard**
 6. **DualContact Wizard**
 
@@ -42,7 +54,7 @@ Reine Vergleichs-/Anzeige-Funktion als Ziel des MVP — **kein** automatisches S
 | Anbieter | Scope | Zweck |
 |---|---|---|
 | Google | `https://www.googleapis.com/auth/contacts.readonly` | Lesezugriff auf alle Kontakte |
-| Microsoft | `Contacts.Read` (Microsoft Graph) | Lesezugriff auf alle Outlook-Kontakte |
+| ~~Microsoft~~ | ~~`Contacts.Read` (Microsoft Graph)~~ | **entfällt im MVP** — Outlook kommt per Datei-Export rein (siehe Umsetzungsstand oben) |
 
 Entscheidung: **Nur Lesezugriff (readonly)** für das MVP. Schreibzugriff (`contacts` / `Contacts.ReadWrite`) erst ergänzen, falls das Tool später auch Merge/Sync-Funktionen bekommen soll — das ist explizit NICHT Teil des aktuellen Scopes.
 
@@ -60,12 +72,12 @@ Konkreter Stack:
 |---|---|---|
 | Sprache | Python 3.11+ | siehe oben |
 | Google OAuth | `google-auth-oauthlib`, `google-api-python-client` | offiziell von Google gepflegt |
-| Microsoft OAuth | `msal` (Microsoft Authentication Library) | offiziell von Microsoft gepflegt |
-| Lokales UI | Streamlit (bevorzugt für schnellen Start) — alternativ FastAPI + Jinja2, falls mehr Kontrolle über den OAuth-Redirect-Flow nötig ist | Diff-Tabellen-Darstellung ist Streamlits Stärke |
+| ~~Microsoft OAuth~~ | ~~`msal`~~ → **Outlook-Datei-Import** (`csv` stdlib + `vobject` für vCard) | Azure-Tenant für privates MS-Konto nicht möglich/gewollt |
+| Lokales UI | Streamlit + Google-Loopback-Flow (entschieden) | Diff-Tabellen-Darstellung ist Streamlits Stärke |
 | Fuzzy-Matching | `rapidfuzz` | für Namens-/Telefonnummer-Abgleich, wenn E-Mail als Schlüssel fehlt |
 | Packaging (später, nicht MVP) | PyInstaller | einzelne ausführbare Datei ohne Python-Installation beim Endnutzer |
 
-**Offene technische Frage, die in der ersten Coding-Session zu klären ist:** Streamlit hat keinen eingebauten Mechanismus für OAuth-Redirect-Callbacks (lokaler Callback-Server auf z. B. `localhost:8080/callback`). Ggf. Kombination nötig: kleiner lokaler HTTP-Server (z. B. via `http.server` oder FastAPI) nur für den OAuth-Redirect, danach Übergabe an Streamlit-UI. Muss beim Aufsetzen entschieden werden.
+**~~Offene technische Frage~~ (gelöst):** Der OAuth-Redirect läuft über den Loopback-Server, den `google-auth-oauthlib` (`InstalledAppFlow.run_local_server(port=0)`) selbst hochfährt. Kein separater FastAPI-/`http.server`-Callback nötig. Da Outlook per Datei-Import kommt, gibt es nur noch *einen* OAuth-Flow (Google).
 
 ## Matching-Strategie für den Kontaktvergleich
 
@@ -99,6 +111,7 @@ Konsequenzen für das aktuelle MVP-Design, die schon jetzt berücksichtigt werde
 
 - Kein automatisches Schreiben/Mergen/Synchronisieren von Kontakten
 - Keine Google-App-Verifizierung
+- **Kein Microsoft Graph / Azure / `msal` im MVP** — Outlook nur per Datei-Export (CSV/vCard). Graph ggf. als spätere Ergänzung.
 - Kein Electron/natives Desktop-Packaging
 - Keine Implementierung von iCloud oder weiteren Anbietern im MVP (nur architektonisch vorbereiten, siehe oben) — konkrete Umsetzung erst nach MVP-Abschluss
 
@@ -110,13 +123,13 @@ Der Nutzer möchte **keine einzige Zeile Code selbst anfassen** und arbeitet bew
 - Vor Zwischenschritten (z. B. OAuth-App-Registrierung in Google Cloud Console/Azure), die zwingend eine manuelle Aktion des Nutzers außerhalb des Chats erfordern, dies klar als solche kennzeichnen — das ist die Ausnahme, nicht die Regel
 - Rückfragen und Freigaben ("passt das so?") statt stillschweigender Annahmen, analog zum iterativen Vorgehen aus der Konzeptionsphase dieses Dokuments
 
-## Nächste Schritte für die erste Coding-Session
+## Nächste Schritte (aktualisiert)
 
-1. Repo-Grundgerüst anlegen (Ordnerstruktur, `requirements.txt`, `.gitignore` inkl. Token-/Credential-Dateien)
-2. Google Cloud Console App-Registrierung gemeinsam mit dem Nutzer durchgehen (OAuth Consent Screen, Client-ID für Desktop-App)
-3. Azure/Microsoft Entra App-Registrierung gemeinsam durchgehen (Redirect-URI für lokalen Callback, API-Permissions)
-4. Minimalen OAuth-Flow für beide Anbieter isoliert testen (nur Login + Token erhalten, noch kein Kontaktabruf)
-5. Kontaktabruf beider APIs implementieren, in einheitliches internes Datenmodell normalisieren
-6. Matching-Logik implementieren und mit echten (anonymisierten Test-)Kontakten des Nutzers verifizieren
-7. Diff-UI in Streamlit bauen
-8. README für andere Nutzer schreiben (Setup-Anleitung: Python installieren, Repo klonen, `pip install -r requirements.txt`, starten)
+1. ~~Repo-Grundgerüst~~ ✅ erledigt
+2. ~~Google Cloud Console App-Registrierung~~ ✅ erledigt (Client-ID/-Secret in `config.toml`)
+3. ~~Azure/Microsoft Entra App-Registrierung~~ ❌ entfällt — Outlook per Datei-Import
+4. ~~OAuth-Flow isoliert testen~~ ✅ Google getestet (`scripts/test_google_login.py`, echtes Konto, 228 Kontakte)
+5. Kontaktabruf: Google People API (alle Felder, paginiert) + Outlook-Datei-Parser (`sources/outlook_file.py` ✅) ins neutrale Modell normalisieren
+6. Matching-Logik implementieren (E-Mail → Telefon → Fuzzy-Name) und mit echten Testdaten des Nutzers verifizieren (`outlook-contacts.csv`, gitignored, liegt lokal vor)
+7. Diff-UI in Streamlit bauen (Datei-Upload für Outlook + „Mit Gmail verbinden" + „Vergleichen")
+8. README für andere Nutzer schreiben ✅ (Rohfassung vorhanden, bei Feature-Fortschritt aktualisieren)

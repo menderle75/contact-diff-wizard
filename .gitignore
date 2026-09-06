@@ -21,3 +21,8 @@ client_secret*.json
 .DS_Store
 .idea/
 .vscode/
+
+# Local contact exports / test data
+outlook-contacts.csv
+*.vcf
+export_*.csv

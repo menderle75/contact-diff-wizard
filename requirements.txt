@@ -5,12 +5,9 @@ streamlit>=1.38
 google-auth-oauthlib>=1.2
 google-api-python-client>=2.140
 
-# Microsoft OAuth (Graph)
-msal>=1.31
+# Outlook export parsing (vCard); CSV is handled by the stdlib
+vobject>=0.9.9
 
 # Matching helpers
 rapidfuzz>=3.9
 phonenumbers>=8.13
-
-# HTTP (Microsoft Graph calls)
-requests>=2.32
