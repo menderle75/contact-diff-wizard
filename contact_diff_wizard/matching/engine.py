@@ -139,6 +139,25 @@ def _addr_set(c: Contact) -> set[str]:
     return out
 
 
+def _addr_norm(a) -> str:
+    raw = " ".join(
+        p for p in (a.street, a.postal_code, a.city, a.region, a.country) if p
+    )
+    toks = sorted(t for t in re.split(r"[^0-9a-zäöüß]+", raw.casefold()) if t)
+    return " ".join(toks)
+
+
+def _addr_by_label(contacts: list[Contact]) -> dict[str, set[str]]:
+    """label value -> set of normalized address strings, merged across contacts."""
+    out: dict[str, set[str]] = {}
+    for c in contacts:
+        for a in c.addresses:
+            key = _addr_norm(a)
+            if key:
+                out.setdefault(a.label.value, set()).add(key)
+    return out
+
+
 def _addr_sets_equivalent(sets: list[set[str]]) -> bool:
     """True if every address in each set has a fuzzy partner in every other set."""
     for i in range(len(sets)):
@@ -152,6 +171,35 @@ def _addr_sets_equivalent(sets: list[set[str]]) -> bool:
                 ):
                     return False
     return True
+
+
+def addresses_equivalent(a: list, b: list) -> bool:
+    """a, b: lists of PostalAddress already filtered to the same label.
+
+    True if they describe the same place(s) (formatting/order ignored). Empty
+    on one side only -> not equivalent; empty on both -> equivalent.
+    """
+    sa = {k for k in (_addr_norm(x) for x in a) if k}
+    sb = {k for k in (_addr_norm(x) for x in b) if k}
+    if not sa or not sb:
+        return not sa and not sb
+    return _addr_sets_equivalent([sa, sb])
+
+
+def addresses_differ(left: list[Contact], right: list[Contact]) -> bool:
+    """Compare addresses *per label* (home↔home, work↔work).
+
+    A divergence is only a genuine conflict when both sides carry an address of
+    the *same* type and those differ. An address type present on just one side
+    is extra information, not a conflict — and a private address must never be
+    diffed against a business address.
+    """
+    lbl_left = _addr_by_label(left)
+    lbl_right = _addr_by_label(right)
+    for label in set(lbl_left) & set(lbl_right):
+        if not _addr_sets_equivalent([lbl_left[label], lbl_right[label]]):
+            return True
+    return False
 
 
 def _org_key(c: Contact) -> str:
@@ -202,25 +250,32 @@ def _compare_group(members: list[Contact], source_ids: list[str]) -> list[FieldD
              for sid, cs in by_source.items()},
         ))
 
-    # --- set-valued fields: emails + phones exact, addresses fuzzy
-    for fname, fn in (("emails", _email_set), ("phones", _phone_set),
-                      ("addresses", _addr_set)):
+    # --- emails + phones: exact set comparison
+    for fname, fn in (("emails", _email_set), ("phones", _phone_set)):
         sets_by_source = {sid: _merge_sets(cs, fn) for sid, cs in by_source.items()}
         non_empty = [s for s in sets_by_source.values() if s]
         if len(non_empty) < 2:
             continue  # only one source has any value -> not a "divergence"
-
-        if fname == "addresses":
-            differs = not _addr_sets_equivalent(non_empty)
-        else:
-            differs = any(a != b for a in non_empty for b in non_empty)
-
-        if differs:
+        if any(a != b for a in non_empty for b in non_empty):
             diffs.append(FieldDiff(
                 fname,
                 {sid: ", ".join(sorted(s)) if s else "—"
                  for sid, s in sets_by_source.items()},
             ))
+
+    # --- addresses: compared per label (see addresses_differ)
+    src_with_addr = [sid for sid, cs in by_source.items()
+                     if any(c.addresses for c in cs)]
+    if any(
+        addresses_differ(by_source[src_with_addr[i]], by_source[src_with_addr[j]])
+        for i in range(len(src_with_addr))
+        for j in range(i + 1, len(src_with_addr))
+    ):
+        diffs.append(FieldDiff(
+            "addresses",
+            {sid: ", ".join(sorted(_merge_sets(cs, _addr_set))) or "—"
+             for sid, cs in by_source.items()},
+        ))
 
     return diffs
 

@@ -174,7 +174,7 @@ def _decision_panel(idx: int, cmp: dict) -> None:
             f"{r['icon']} {r['label']}",
             options=opts,
             horizontal=True,
-            key=f"dec::{idx}::{r['field']}",
+            key=f"dec::{idx}::{r['key']}",
         )
 
 
@@ -183,10 +183,10 @@ def _collect_decisions(groups) -> list[dict]:
     for key, val in st.session_state.items():
         if not key.startswith("dec::") or val == "offen":
             continue
-        _, sidx, field = key.split("::", 2)
+        _, sidx, rowkey = key.split("::", 2)
         g = groups[int(sidx)]
         cmp = report.comparison(g)
-        row = next((x for x in cmp["diff_rows"] if x["field"] == field), None)
+        row = next((x for x in cmp["diff_rows"] if x["key"] == rowkey), None)
         if row is None:
             continue
         out.append({

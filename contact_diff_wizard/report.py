@@ -8,11 +8,16 @@ from __future__ import annotations
 import csv
 import io
 
-from contact_diff_wizard.matching.engine import DiffCategory, MatchGroup
+from contact_diff_wizard.matching.engine import (
+    DiffCategory,
+    MatchGroup,
+    addresses_equivalent,
+)
 from contact_diff_wizard.model import Contact
 
 # field order + presentation metadata
 FIELD_ORDER = ["name", "organization", "emails", "phones", "addresses"]
+SCALAR_SET_FIELDS = ["name", "organization", "emails", "phones"]
 FIELD_ICON = {
     "name": "👤",
     "organization": "🏢",
@@ -28,19 +33,37 @@ FIELD_LABEL = {
     "addresses": "Adresse",
 }
 
+# address / phone type -> human name (German for now; see CLAUDE.md i18n TODO)
+TYPE_NAME = {"home": "privat", "work": "geschäftlich", "mobile": "mobil",
+             "other": "sonstige"}
+TYPE_ORDER = ["home", "work", "mobile", "other"]
+
 
 # ---------------------------------------------------------------------------
 # value extraction
+def _fmt_one_address(a) -> str:
+    return ", ".join(
+        p for p in (a.street, f"{a.postal_code} {a.city}".strip(),
+                    a.region, a.country) if p and p.strip()
+    )
+
+
 def _fmt_address(c: Contact) -> list[str]:
-    out = []
-    for a in c.addresses:
-        line = ", ".join(
-            p for p in (a.street, f"{a.postal_code} {a.city}".strip(),
-                        a.region, a.country) if p and p.strip()
-        )
-        if line:
-            out.append(line)
-    return out
+    return [line for a in c.addresses if (line := _fmt_one_address(a))]
+
+
+def _addresses_for_type(contacts: list[Contact], atype: str):
+    """(PostalAddress list, formatted-line list) for one address type."""
+    objs, lines = [], []
+    for c in contacts:
+        for a in c.addresses:
+            if a.label.value != atype:
+                continue
+            objs.append(a)
+            line = _fmt_one_address(a)
+            if line and line not in lines:
+                lines.append(line)
+    return objs, lines
 
 
 def field_values(contacts: list[Contact], field: str) -> list[str]:
@@ -122,24 +145,46 @@ def comparison(g: MatchGroup, left: str = "google", right: str = "outlook") -> d
     right_cs = g.members_of(right)
     differing = {d.field_name for d in g.field_diffs}
 
+    diverging = g.category is DiffCategory.DIVERGING
     diff_rows, same_rows = [], []
-    for f in FIELD_ORDER:
+
+    for f in SCALAR_SET_FIELDS:
         lvals = field_values(left_cs, f)
         rvals = field_values(right_cs, f)
         if not lvals and not rvals:
             continue
         row = {
             "field": f,
+            "key": f,
             "icon": FIELD_ICON[f],
             "label": FIELD_LABEL[f],
             "left": lvals,
             "right": rvals,
             "only_one": bool(lvals) != bool(rvals),
         }
-        if f in differing or (row["only_one"] and g.category is DiffCategory.DIVERGING):
+        if f in differing or (row["only_one"] and diverging):
             diff_rows.append(row)
         else:
             same_rows.append(row)
+
+    # addresses: one row per type (home / work / other), compared like-for-like
+    for atype in TYPE_ORDER:
+        lobjs, llines = _addresses_for_type(left_cs, atype)
+        robjs, rlines = _addresses_for_type(right_cs, atype)
+        if not llines and not rlines:
+            continue
+        both_sides = bool(lobjs) and bool(robjs)
+        is_diff = both_sides and not addresses_equivalent(lobjs, robjs)
+        row = {
+            "field": "addresses",
+            "key": f"addresses:{atype}",
+            "icon": FIELD_ICON["addresses"],
+            "label": f"{FIELD_LABEL['addresses']} ({TYPE_NAME.get(atype, atype)})",
+            "left": llines,
+            "right": rlines,
+            "only_one": bool(lobjs) != bool(robjs),
+        }
+        (diff_rows if is_diff else same_rows).append(row)
 
     name = next((c.display_name for c in g.members if c.display_name), "—")
     return {"name": name, "diff_rows": diff_rows, "same_rows": same_rows,
