@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -47,9 +48,14 @@ def load_or_run_flow(
         return creds
 
     if creds and creds.expired and creds.refresh_token:
-        creds.refresh(Request())
-        path.write_text(creds.to_json(), encoding="utf-8")
-        return creds
+        try:
+            creds.refresh(Request())
+            path.write_text(creds.to_json(), encoding="utf-8")
+            return creds
+        except RefreshError:
+            # Refresh tokens of apps in "Testing" status expire after 7 days (or the
+            # user revoked access): fall through to a fresh browser login.
+            path.unlink(missing_ok=True)
 
     flow = InstalledAppFlow.from_client_config(
         _client_config(client_id, client_secret), scopes

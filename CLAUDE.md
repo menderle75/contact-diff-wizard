@@ -9,7 +9,9 @@ Entscheidungen, die die ursprüngliche Konzeption unten an einigen Stellen über
 - **Name:** endgültig **ContactDiffWizard** (Python-Paket `contact_diff_wizard`). Die Namensliste unten ist erledigt.
 - **UI/OAuth:** Streamlit + Loopback-Flow der offiziellen Google-Libs (`InstalledAppFlow.run_local_server`). Die „offene technische Frage" zum Redirect-Callback ist damit beantwortet — kein separater FastAPI-Server nötig. Token-Cache in gitignorierten `*.token.json`-Dateien.
 - **Google:** vollständig funktionsfähig (OAuth + People API, gegen echtes Konto getestet). Einmalige OAuth-App liegt beim Maintainer, Client-ID/-Secret in gitignorierter `config.toml`.
-- **Microsoft/Outlook:** **kein Azure, kein Microsoft Graph, kein `msal`.** Ein privates Microsoft-Konto kann keinen Entra-Tenant anlegen (Microsoft hat das zugemacht), und der Nutzer will kein kostenpflichtiges/kreditkartengebundenes Azure-Konto. Stattdessen: **Outlook-Kontakte werden als Datei-Export eingelesen** (CSV im Outlook-Format oder vCard `.vcf`) über `sources/outlook_file.py`. Microsoft Graph bleibt eine mögliche *spätere* Ergänzung, ist aber nicht Teil des MVP.
+- **Microsoft/Outlook:** **kein Azure, kein Microsoft Graph, kein `msal`.** Ein privates Microsoft-Konto kann keinen Entra-Tenant anlegen (Microsoft hat das zugemacht), und der Nutzer will kein kostenpflichtiges/kreditkartengebundenes Azure-Konto. Stattdessen: **Outlook-Kontakte werden als Datei-Export eingelesen** (CSV im Outlook-Format oder vCard `.vcf`) über `sources/outlook_file.py`. Microsoft Graph mit *eigener* App-Registrierung bleibt außerhalb des MVP.
+- **Outlook live via MCP (ergänzt, optional):** Die App startet den lokalen `@softeria/ms-365-mcp-server` (`npx -y @softeria/ms-365-mcp-server`, Node nötig) als MCP-Unterprozess und liest `list-outlook-contacts` (`sources/microsoft_mcp.py`, Python-Paket `mcp>=2.0`). Der Server bringt seine eigene App-Registrierung und seinen Login-Cache mit — daher kein eigener Azure-Tenant nötig. Gegen die CSV-Gegenprobe verifiziert (627 Kontakte, identische E-Mail-/Telefonmengen, identisches Vergleichsergebnis). In der Sidebar umschaltbar: *Datei* / *Live (MS365-MCP)*. Datei-Import bleibt gleichwertig, damit Fremdnutzer ohne Node/MCP auskommen.
+- **Google-Token-Ablauf:** App im Status „Testing" ⇒ Refresh-Token verfällt nach 7 Tagen ⇒ `auth/google_auth.py` fängt `RefreshError` ab und startet den Browser-Login neu (früher Absturz). „Auf Produktion stellen" (weiterhin unverifiziert) würde das wöchentliche Neu-Einloggen vermeiden — Entscheidung beim Nutzer.
 - **Repo:** öffentlich unter https://github.com/menderle75/contact-diff-wizard (MIT).
 
 Wo unten „Microsoft OAuth", „Azure/Entra", „`msal`" oder „beide OAuth-Flows" steht: gilt nicht mehr, siehe oben. Die Architektur-Leitplanken (anbieter-agnostisches Modell, `ContactSource`-Interface, Liste von Quellen) bleiben — die Datei-Quelle ist einfach eine weitere `ContactSource`-Implementierung.
@@ -72,7 +74,7 @@ Konkreter Stack:
 |---|---|---|
 | Sprache | Python 3.11+ | siehe oben |
 | Google OAuth | `google-auth-oauthlib`, `google-api-python-client` | offiziell von Google gepflegt |
-| ~~Microsoft OAuth~~ | ~~`msal`~~ → **Outlook-Datei-Import** (`csv` stdlib + `vobject` für vCard) | Azure-Tenant für privates MS-Konto nicht möglich/gewollt |
+| ~~Microsoft OAuth~~ | ~~`msal`~~ → **Outlook-Datei-Import** (`csv` stdlib + `vobject` für vCard) **oder** live per MCP-Client (`mcp`) gegen `@softeria/ms-365-mcp-server` | Azure-Tenant für privates MS-Konto nicht möglich/gewollt |
 | Lokales UI | Streamlit + Google-Loopback-Flow (entschieden) | Diff-Tabellen-Darstellung ist Streamlits Stärke |
 | Fuzzy-Matching | `rapidfuzz` | für Namens-/Telefonnummer-Abgleich, wenn E-Mail als Schlüssel fehlt |
 | Packaging (später, nicht MVP) | PyInstaller | einzelne ausführbare Datei ohne Python-Installation beim Endnutzer |
@@ -111,7 +113,7 @@ Konsequenzen für das aktuelle MVP-Design, die schon jetzt berücksichtigt werde
 
 - Kein automatisches Schreiben/Mergen/Synchronisieren von Kontakten
 - Keine Google-App-Verifizierung
-- **Kein Microsoft Graph / Azure / `msal` im MVP** — Outlook nur per Datei-Export (CSV/vCard). Graph ggf. als spätere Ergänzung.
+- **Kein eigenes Microsoft Graph / Azure / `msal` im MVP** — Outlook per Datei-Export (CSV/vCard) oder optional live über den MS365-MCP-Server (siehe Umsetzungsstand).
 - Kein Electron/natives Desktop-Packaging
 - Keine Implementierung von iCloud oder weiteren Anbietern im MVP (nur architektonisch vorbereiten, siehe oben) — konkrete Umsetzung erst nach MVP-Abschluss
 

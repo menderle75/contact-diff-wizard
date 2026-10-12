@@ -18,10 +18,18 @@ or sync anything.
 **Gmail:** you log in through the normal Google consent screen in your browser
 (no API setup on your side). While the app is unverified you'll see a "Google
 hasn't verified this app" warning — click *Advanced → Go to ContactDiffWizard*.
-Only the read-only `contacts.readonly` scope is requested.
+Only the read-only `contacts.readonly` scope is requested. While the Google OAuth
+app is in "Testing" status the stored token expires after 7 days; the app then simply
+opens the browser login again.
 
-**Outlook:** export your contacts to a file and hand that file to the app —
-there is no Microsoft/Azure setup. Supported:
+**Outlook:** two options, neither needs an Azure/Microsoft app registration of your own.
+
+1. **Live via MCP** (optional) — the app starts the local
+   [`@softeria/ms-365-mcp-server`](https://github.com/Softeria/ms-365-mcp-server)
+   (needs Node.js/`npx`) and reads your Outlook contacts through it. Log in to that
+   server once (`npx -y @softeria/ms-365-mcp-server --login`), then choose *Live (MS365 MCP)*
+   in the sidebar and click *Check connection*.
+2. **Export file** — export your contacts and hand the file to the app. Supported:
 
 - **CSV** — Outlook.com: *People → Manage → Export contacts*; or classic Outlook
   Desktop: *File → Open & Export → Import/Export → Export to a file → Comma
@@ -56,6 +64,7 @@ The UI ships with English and German and a language switcher in the sidebar.
 
 - [x] Google OAuth (loopback) + People API contact fetch
 - [x] Outlook export parser (CSV + vCard)
+- [x] Optional live Outlook source via the MS365 MCP server
 - [x] Matching (email → phone → fuzzy name) and field-level diff
 - [x] Diff UI (one view, category selector)
 - [ ] Duplicate view, nicer address/phone diff rendering, full UI i18n

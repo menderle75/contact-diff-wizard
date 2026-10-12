@@ -8,6 +8,9 @@ google-api-python-client>=2.140
 # Outlook export parsing (vCard); CSV is handled by the stdlib
 vobject>=0.9.9
 
+# Optional live Outlook source: MCP client for the MS365 MCP server (needs Node.js/npx)
+mcp>=2.0
+
 # Matching helpers
 rapidfuzz>=3.9
 phonenumbers>=8.13

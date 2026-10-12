@@ -26,6 +26,9 @@ from contact_diff_wizard import i18n, report  # noqa: E402
 from contact_diff_wizard.config import load as load_config  # noqa: E402
 from contact_diff_wizard.matching.engine import compare  # noqa: E402
 from contact_diff_wizard.sources.google import GoogleContactSource  # noqa: E402
+from contact_diff_wizard.sources.microsoft_mcp import (  # noqa: E402
+    MicrosoftMcpContactSource,
+)
 from contact_diff_wizard.sources.outlook_file import (  # noqa: E402
     OutlookFileContactSource,
     parse_bytes,
@@ -89,35 +92,62 @@ def _sidebar(cfg: dict) -> None:
         except Exception as exc:  # noqa: BLE001 - surface any login failure
             st.sidebar.error(i18n.t("auth.google.error", error=str(exc)))
 
-    upload = st.sidebar.file_uploader(
-        i18n.t("upload.label"), type=["csv", "vcf", "txt"], help=i18n.t("upload.help")
+    mode = st.sidebar.radio(
+        i18n.t("outlook.mode"),
+        options=["file", "live"],
+        format_func=lambda m: i18n.t(f"outlook.mode_{m}"),
+        horizontal=True,
+        key="outlook_mode",
     )
-    if upload is not None:
-        data = upload.getvalue()
-        st.session_state.outlook_bytes = data
-        st.session_state.outlook_name = upload.name
-        try:
-            n = len(parse_bytes(data, filename=upload.name))
-            st.sidebar.caption(i18n.t("upload.loaded", n=n))
-        except Exception as exc:  # noqa: BLE001
-            st.sidebar.error(str(exc))
 
-    # dev convenience: CDW_DEV_OUTLOOK=path/to/export.csv preloads the file so
-    # the compare button works without a manual upload. No effect when unset.
-    dev_file = os.environ.get("CDW_DEV_OUTLOOK")
-    if dev_file and not st.session_state.get("outlook_bytes") and Path(dev_file).is_file():
-        st.session_state.outlook_bytes = Path(dev_file).read_bytes()
-        st.session_state.outlook_name = Path(dev_file).name
-        st.sidebar.caption(f"dev: {Path(dev_file).name}")
+    outlook_ready = False
+    if mode == "file":
+        upload = st.sidebar.file_uploader(
+            i18n.t("upload.label"), type=["csv", "vcf", "txt"], help=i18n.t("upload.help")
+        )
+        if upload is not None:
+            data = upload.getvalue()
+            st.session_state.outlook_bytes = data
+            st.session_state.outlook_name = upload.name
+            try:
+                n = len(parse_bytes(data, filename=upload.name))
+                st.sidebar.caption(i18n.t("upload.loaded", n=n))
+            except Exception as exc:  # noqa: BLE001
+                st.sidebar.error(str(exc))
 
-    ready = connected and st.session_state.get("outlook_bytes")
+        # dev convenience: CDW_DEV_OUTLOOK=path/to/export.csv preloads the file so
+        # the compare button works without a manual upload. No effect when unset.
+        dev_file = os.environ.get("CDW_DEV_OUTLOOK")
+        if dev_file and not st.session_state.get("outlook_bytes") and Path(dev_file).is_file():
+            st.session_state.outlook_bytes = Path(dev_file).read_bytes()
+            st.session_state.outlook_name = Path(dev_file).name
+            st.sidebar.caption(f"dev: {Path(dev_file).name}")
+        outlook_ready = bool(st.session_state.get("outlook_bytes"))
+    else:
+        st.sidebar.caption(i18n.t("outlook.live_help"))
+        if st.sidebar.button(i18n.t("outlook.live_check")):
+            with st.spinner(i18n.t("outlook.live_checking")):
+                st.session_state.mcp_status = MicrosoftMcpContactSource().login_status()
+        status = st.session_state.get("mcp_status")
+        if status:
+            ok, msg = status
+            if ok:
+                st.sidebar.success(i18n.t("outlook.live_ok", account=msg))
+            else:
+                st.sidebar.error(i18n.t("outlook.live_error", error=msg))
+        outlook_ready = bool(status and status[0])
+
+    ready = connected and outlook_ready
     if st.sidebar.button(i18n.t("compare.run"), type="primary", disabled=not ready):
         with st.spinner(i18n.t("compare.running")):
             google = _google_source(cfg)
             google.authenticate()
-            outlook = OutlookFileContactSource.from_upload(
-                st.session_state.outlook_bytes, st.session_state.outlook_name
-            )
+            if mode == "file":
+                outlook = OutlookFileContactSource.from_upload(
+                    st.session_state.outlook_bytes, st.session_state.outlook_name
+                )
+            else:
+                outlook = MicrosoftMcpContactSource()
             st.session_state.groups = compare([google, outlook])
             st.session_state.pop("sel_idx", None)
             st.session_state.pop("decisions_seed", None)

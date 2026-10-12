@@ -29,5 +29,13 @@
   "decide.title": "Which value to keep?",
   "decide.both": "both",
   "decide.export": "Download {n} decisions as CSV",
-  "col.delta_help": "Which field types differ"
+  "col.delta_help": "Which field types differ",
+  "outlook.mode": "Outlook source",
+  "outlook.mode_file": "File",
+  "outlook.mode_live": "Live (MS365 MCP)",
+  "outlook.live_help": "Reads contacts directly through the local MS365 MCP server (@softeria/ms-365-mcp-server, needs Node.js/npx). No export required.",
+  "outlook.live_check": "Check connection",
+  "outlook.live_checking": "Starting MCP server…",
+  "outlook.live_ok": "Outlook connected: {account}",
+  "outlook.live_error": "Outlook MCP not ready: {error}"
 }

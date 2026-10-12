@@ -29,5 +29,13 @@
   "decide.title": "Was übernehmen?",
   "decide.both": "beide",
   "decide.export": "{n} Entscheidungen als CSV herunterladen",
-  "col.delta_help": "Welche Feldtypen abweichen"
+  "col.delta_help": "Welche Feldtypen abweichen",
+  "outlook.mode": "Outlook-Quelle",
+  "outlook.mode_file": "Datei",
+  "outlook.mode_live": "Live (MS365-MCP)",
+  "outlook.live_help": "Liest die Kontakte direkt über den lokalen MS365-MCP-Server (@softeria/ms-365-mcp-server, benötigt Node.js/npx). Kein Export nötig.",
+  "outlook.live_check": "Verbindung prüfen",
+  "outlook.live_checking": "MCP-Server wird gestartet…",
+  "outlook.live_ok": "Outlook verbunden: {account}",
+  "outlook.live_error": "Outlook-MCP nicht bereit: {error}"
 }
